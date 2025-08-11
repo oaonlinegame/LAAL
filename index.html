@@ -232,9 +232,10 @@
                                                         logModal.summary.grade ||
                                                         '-' }}</v-col>
                                                     <v-col cols="12" sm="6" md="6"><b>จำนวนงวด:</b>
-                                                        xxx / xxx</v-col>
+                                                        {{ logModal.summary.termsPaid || '-' }} / {{
+                                                        logModal.summary.termsTotal || '-' }}</v-col>
                                                     <v-col cols="12" sm="6" md="6"><b>เคลื่อนไหวล่าสุด:</b>
-                                                        xx/xx/xxxx</v-col>
+                                                        {{ logModal.summary.lastActive || '-' }}</v-col>
                                                 </v-row>
                                             </v-card-text>
                                         </v-card>
@@ -310,6 +311,9 @@
                                     <v-col cols="12">
                                         <v-data-table :headers="logModal.headers" :items="logModal.logs"
                                             :items-per-page="5" class="elevation-1">
+                                            <template v-slot:item.termsSummary="{ item }">
+                                                <span>{{ item.termsTotal || '-' }} / {{ item.termsPaid || '-' }}</span>
+                                            </template>
                                             <template v-slot:item.actions="{ item, index }">
                                                 <v-btn icon color="green" @click="onEditLog(item, index)">
                                                     <v-icon>mdi-pencil</v-icon>

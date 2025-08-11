@@ -144,10 +144,10 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             calculation: {
                 carPrice: null,
-                loanAmountPercent: null,
+                loanAmountPercent: 100, // กำหนดค่าเริ่มต้น
                 closeAmount: null,
-                interestRate: null,
-                terms: null,
+                interestRate: 0.65, // กำหนดค่าเริ่มต้น
+                terms: 60, // กำหนดค่าเริ่มต้น
                 expenses: null,
             }
         },
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let monthlyPayment = 0;
                 let totalInterest = 0;
                 if (loanAmount > 0 && terms > 0) {
-                    totalInterest = loanAmount * (interestRate / 100) * terms;
+                    totalInterest = (loanAmount + expenses) * (interestRate / 100) * terms;
                     monthlyPayment = (loanAmount + expenses + totalInterest) / terms;
                 }
 
@@ -253,7 +253,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.leads = getLeads().map(lead => ({
                     ...lead,
                     fullName: `${lead.first || ''} ${lead.last || ''}`,
-                    carPrice: lead.carPrice ? Number(lead.carPrice) : null
+                    carPrice: lead.carPrice ? Number(lead.carPrice) : null,
+                    // ดึงค่าล่าสุดจาก logs มาแสดงในหน้าหลัก
+                    ... (lead.logs && lead.logs.length > 0 ? {
+                        lastActive: lead.logs[lead.logs.length - 1].callDate,
+                        termsTotal: lead.logs[lead.logs.length - 1].termsTotal,
+                        termsPaid: lead.logs[lead.logs.length - 1].termsPaid,
+                    } : {})
                 }));
                 this.loading = false;
             },
@@ -326,10 +332,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Set default values for calculation inputs from the current lead
                 this.calculation.carPrice = item.carPrice ? Number(item.carPrice) : null;
-                this.calculation.loanAmountPercent = null;
+                // ตั้งค่าเริ่มต้นตามที่ต้องการ
+                this.calculation.loanAmountPercent = 100;
                 this.calculation.closeAmount = null;
-                this.calculation.interestRate = null;
-                this.calculation.terms = null;
+                this.calculation.interestRate = 0.65;
+                this.calculation.terms = 60;
                 this.calculation.expenses = null;
 
                 const logs = item.logs || [];
@@ -372,7 +379,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }));
                 this.logModal.summary = {
                     contract: item.contract || '-', type: item.type || '-', fullName: item.fullName || '-', nick: item.nick || '-', phone: item.phone || '-',
-                    postal: item.postal || '-', brand: item.brand || '-', model: item.model || '-', year: item.year || '-', carPrice: item.carPrice ? Number(item.carPrice).toLocaleString() : '-', grade: item.grade || '-'
+                    postal: item.postal || '-', brand: item.brand || '-', model: item.model || '-', year: item.year || '-',
+                    carPrice: item.carPrice ? Number(item.carPrice).toLocaleString() : '-', grade: item.grade || '-',
+                    termsTotal: latestLog.termsTotal || null, termsPaid: latestLog.termsPaid || null, lastActive: latestLog.callDate || null,
                 };
             },
             closeLogModal() {
@@ -396,6 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // นำค่าที่คำนวณจาก computedCalculation มาใช้เป็นค่าเริ่มต้น
                 const loanAmount = this.toNum(this.calculation.carPrice) * (this.toNum(this.calculation.loanAmountPercent) / 100);
                 const remaining = loanAmount - this.toNum(this.calculation.closeAmount) - this.toNum(this.calculation.expenses);
+                const monthlyPay = this.computedMonthlyPay;
 
                 this.addLogModal.log = {
                     closeAmount: this.toNum(this.calculation.closeAmount) || latestLog.closeAmount || '',
@@ -404,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     remainingAmount: remaining || latestLog.remainingAmount || '',
                     interestRate: this.toNum(this.calculation.interestRate) || latestLog.interestRate || '',
                     months: this.toNum(this.calculation.terms) || latestLog.months || '',
-                    monthlyPay: this.computedMonthlyPay || latestLog.monthlyPay || '',
+                    monthlyPay: monthlyPay || latestLog.monthlyPay || '',
                     campaign: latestLog.campaign || '',
                     callDate: latestLog.callDate || new Date().toISOString().substr(0, 10),
                     callTime: latestLog.callTime || new Date().toTimeString().substr(0, 5),
