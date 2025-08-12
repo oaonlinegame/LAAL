@@ -86,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
         data: {
             loading: false,
             search: '',
+            menuWidth: 0,
             filters: {
                  contract: '', type: '', first: '', last: '', nick: '', phone: '', postal: '', grade: '', interest: '', call: '',
             },
@@ -230,6 +231,12 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         created() {
             this.fetchLeads();
+        },
+        mounted() {
+            this.menuWidth = this.$refs.searchInput.$el.offsetWidth;
+            window.onresize = () => {
+                this.menuWidth = this.$refs.searchInput.$el.offsetWidth;
+            };
         },
         methods: {
 
