@@ -58,6 +58,7 @@
               </v-card-title>
 
                 <v-text-field
+                  ref="searchInput"
                   v-model="search"
                   label="ค้นหา"
                   single-line
@@ -65,7 +66,7 @@
                   outlined
                 >
                   <template v-slot:append>
-                    <v-menu :close-on-content-click="false" offset-y content-class="filter-menu">
+                    <v-menu :close-on-content-click="false" offset-y content-class="filter-menu" :max-width="menuWidth" :min-width="menuWidth">
                       <template v-slot:activator="{ on, attrs }">
                         <v-btn icon v-bind="attrs" v-on="on">
                           <v-icon>mdi-tune</v-icon>
@@ -1071,8 +1072,7 @@
     position: absolute; /* เปลี่ยนเป็น absolute เพื่อให้สัมพันธ์กับ parent */
   }
 
-  .filter-menu-card {
-    /* ใช้ min-width เพื่อให้ขนาดของเมนูไม่เล็กเกินไป และจะกว้างตาม container */
-    min-width: 350px; 
+  .filter-menu {
+    width: 100%;
   }
 </style>
