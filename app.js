@@ -87,13 +87,13 @@ document.addEventListener('DOMContentLoaded', () => {
             loading: false,
             search: '',
             filters: {
-                contract: '', type: '', first: '', last: '', nick: '', phone: '', grade: '', interest: '', call: '',
+                 contract: '', type: '', first: '', last: '', nick: '', phone: '', postal: '', grade: '', interest: '', call: '',
             },
             leads: [],
             settings: getSettings(),
             headers: [
                 { text: 'เลขที่สัญญา', value: 'contract' },
-                { text: 'ประเภท', value: 'type' },
+                { text: 'สัญญา', value: 'type' },
                 { text: 'ชื่อลูกค้า', value: 'fullName' },
                 { text: 'เกรด', value: 'grade' },
                 { text: 'ชื่อเล่น', value: 'nick' },
@@ -162,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         (!this.filters.last || (it.last || '').toLowerCase().includes(this.filters.last.toLowerCase())) &&
                         (!this.filters.nick || (it.nick || '').toLowerCase().includes(this.filters.nick.toLowerCase())) &&
                         (!this.filters.phone || (it.phone || '').toLowerCase().includes(this.filters.phone.toLowerCase())) &&
+                        (!this.filters.postal || (it.postal || '').toLowerCase().includes(this.filters.postal.toLowerCase())) &&
                         (!this.filters.interest || it.interest === this.filters.interest) &&
                         (!this.filters.call || it.call === this.filters.call) &&
                         (!this.filters.grade || (it.grade || '').toLowerCase().includes(this.filters.grade.toLowerCase()))
@@ -275,8 +276,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.leads = getLeads().map(lead => ({ ...lead, fullName: `${lead.first || ''} ${lead.last || ''}` }));
             },
             clearFilters() {
-                this.filters = { contract: '', type: '', first: '', last: '', nick: '', phone: '', grade: '', interest: '', call: '' };
-            },
+              this.filters = { contract: '', type: '', first: '', last: '', nick: '', phone: '', postal: '', grade: '', interest: '', call: '' };
+             },
             openModal(mode, item = null) {
                 this.modal.show = true;
                 this.modal.isEdit = mode === 'edit';

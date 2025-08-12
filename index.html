@@ -1,530 +1,1078 @@
 <!DOCTYPE html>
 <html lang="th">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CRM Lead Manager</title>
-    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css"
+      rel="stylesheet"
+    />
     <style>
-        .v-data-table__mobile-row {
-            border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-        }
+      .v-data-table__mobile-row {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+      }
 
-        .v-data-table__mobile-row__header {
-            font-weight: bold;
-            color: rgba(0, 0, 0, 0.6);
-        }
+      .v-data-table__mobile-row__header {
+        font-weight: bold;
+        color: rgba(0, 0, 0, 0.6);
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="app">
-        <v-app>
-            <v-main>
-                <v-container>
-                    <v-card class="mt-5">
-                        <v-card-title>
-                            <span class="headline">CRM Lead Manager</span>
-                            <v-spacer></v-spacer>
-                            <v-btn color="primary" @click="openModal('add')">เพิ่ม Lead</v-btn>
-                            <v-btn color="secondary" class="ml-2" @click="openSettings">ตั้งค่า</v-btn>
-                            <v-btn color="info" class="ml-2" @click="exportAllCsv">ส่งออกทั้งหมด</v-btn>
-                            <v-btn color="success" class="ml-2" @click="openImportLeadDialog">นำเข้า Lead</v-btn>
-                            <v-btn color="warning" class="ml-2" @click="openImportLogDialog">นำเข้า Log</v-btn>
-                        </v-card-title>
+      <v-app>
+        <v-main>
+          <v-container>
+            <v-card class="mt-5">
+              <v-card-title>
+                <span class="headline">CRM Lead Manager</span>
+                <v-spacer></v-spacer>
+                <v-btn color="primary" @click="openModal('add')"
+                  >เพิ่ม Lead</v-btn
+                >
+                <v-btn color="secondary" class="ml-2" @click="openSettings"
+                  >ตั้งค่า</v-btn
+                >
+                <v-btn color="info" class="ml-2" @click="exportAllCsv"
+                  >ส่งออกทั้งหมด</v-btn
+                >
+                <v-btn
+                  color="success"
+                  class="ml-2"
+                  @click="openImportLeadDialog"
+                  >นำเข้า Lead</v-btn
+                >
+                <v-btn color="warning" class="ml-2" @click="openImportLogDialog"
+                  >นำเข้า Log</v-btn
+                >
+              </v-card-title>
 
+                <v-text-field
+                  v-model="search"
+                  label="ค้นหา"
+                  single-line
+                  hide-details
+                  outlined
+                >
+                  <template v-slot:append>
+                    <v-menu :close-on-content-click="false" offset-y content-class="filter-menu">
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-btn icon v-bind="attrs" v-on="on">
+                          <v-icon>mdi-tune</v-icon>
+                        </v-btn>
+                      </template>
+                      <v-card>
+                        <v-card-title class="pa-2">
+                          <span class="text-caption">ฟิลเตอร์เพิ่มเติม</span>
+                          <v-spacer></v-spacer>
+                          <v-btn icon color="error" small @click="clearFilters">
+                            <v-icon>mdi-delete</v-icon>
+                          </v-btn>
+                        </v-card-title>
+                        <v-divider></v-divider>
                         <v-card-text>
-                            <v-text-field v-model="search" append-icon="mdi-magnify" label="ค้นหา" single-line
-                                hide-details></v-text-field>
-                            <v-row class="mt-2">
-                                <v-col cols="12" sm="6" md="3">
-                                    <v-text-field v-model="filters.contract" label="เลขที่สัญญา"></v-text-field>
-                                </v-col>
-                                <v-col cols="12" sm="6" md="3">
-                                    <v-select v-model="filters.type" :items="settings.types" label="ประเภท"></v-select>
-                                </v-col>
-                                <v-col cols="12" sm="6" md="3">
-                                    <v-text-field v-model="filters.first" label="ชื่อ"></v-text-field>
-                                </v-col>
-                                <v-col cols="12" sm="6" md="3">
-                                    <v-text-field v-model="filters.last" label="นามสกุล"></v-text-field>
-                                </v-col>
-                                <v-col cols="12" sm="6" md="3">
-                                    <v-text-field v-model="filters.nick" label="ชื่อเล่น"></v-text-field>
-                                </v-col>
-                                <v-col cols="12" sm="6" md="3">
-                                    <v-text-field v-model="filters.phone" label="เบอร์โทร"></v-text-field>
-                                </v-col>
-                                <v-col cols="12" sm="6" md="3">
-                                    <v-text-field v-model="filters.grade" label="เกรด"></v-text-field>
-                                </v-col>
-                                <v-col cols="12" sm="6" md="3">
-                                    <v-select v-model="filters.interest" :items="settings.interests"
-                                        label="ความสนใจ"></v-select>
-                                </v-col>
-                                <v-col cols="12" sm="6" md="3">
-                                    <v-select v-model="filters.call" :items="settings.calls"
-                                        label="สถานะการโทร"></v-select>
-                                </v-col>
-                                <v-col cols="12" class="text-right">
-                                    <v-btn color="error" @click="clearFilters">ล้างตัวกรอง</v-btn>
-                                </v-col>
-                            </v-row>
+                          <v-row class="mt-2">
+                            <v-col cols="12" sm="6" md="3">
+                              <v-text-field
+                                v-model="filters.contract"
+                                label="เลขที่สัญญา"
+                                outlined
+                                dense
+                              ></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <v-select
+                                v-model="filters.type"
+                                :items="settings.types"
+                                label="สัญญา"
+                                clearable
+                                placeholder="--ทั้งหมด--"
+                                outlined
+                                dense
+                              ></v-select>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <v-text-field
+                                v-model="filters.first"
+                                label="ชื่อ"
+                                outlined
+                                dense
+                              ></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <v-text-field
+                                v-model="filters.last"
+                                label="นามสกุล"
+                                outlined
+                                dense
+                              ></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <v-text-field
+                                v-model="filters.nick"
+                                label="ชื่อเล่น"
+                                outlined
+                                dense
+                              ></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <v-text-field
+                                v-model="filters.phone"
+                                label="เบอร์โทร"
+                                outlined
+                                dense
+                              ></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <v-text-field
+                                v-model="filters.grade"
+                                label="เกรด"
+                                outlined
+                                dense
+                              ></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <v-select
+                                v-model="filters.interest"
+                                :items="settings.interests"
+                                label="ความสนใจ"
+                                clearable
+                                placeholder="--ทั้งหมด--"
+                                outlined
+                                dense
+                              ></v-select>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <v-select
+                                v-model="filters.call"
+                                :items="settings.calls"
+                                label="สถานะการโทร"
+                                clearable
+                                placeholder="--ทั้งหมด--"
+                                outlined
+                                dense
+                              ></v-select>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <v-text-field
+                                v-model="filters.postal"
+                                label="รหัสไปรษณีย์"
+                                outlined
+                                dense
+                              ></v-text-field>
+                            </v-col>
+                          </v-row>
+                        </v-card-text>
+                      </v-card>
+                    </v-menu>
+                  </template>
+                </v-text-field>
+              </v-card-text>
+
+              <v-data-table
+                :headers="headers"
+                :items="filteredLeads"
+                :search="search"
+                :loading="loading"
+                :items-per-page="10"
+                :footer-props="{ 'items-per-page-text': 'รายการต่อหน้า' }"
+              >
+                <template v-slot:item.fullName="{ item }">
+                  <span>{{ item.first }} {{ item.last }}</span>
+                </template>
+                <template v-slot:item.type="{ item }">
+                  <v-chip :color="getChipColor(item.type)" dark
+                    >{{ item.type }}</v-chip
+                  >
+                </template>
+                <template v-slot:item.interest="{ item }">
+                  <v-chip :color="getChipColor(item.interest)" dark
+                    >{{ item.interest }}</v-chip
+                  >
+                </template>
+                <template v-slot:item.call="{ item }">
+                  <v-chip :color="getChipColor(item.call)" dark
+                    >{{ item.call }}</v-chip
+                  >
+                </template>
+                <template v-slot:item.actions="{ item }">
+                  <v-btn icon color="blue" @click="onLog(item)">
+                    <v-icon>mdi-phone</v-icon>
+                  </v-btn>
+                  <v-btn icon color="green" @click="onEdit(item)">
+                    <v-icon>mdi-pencil</v-icon>
+                  </v-btn>
+                  <v-btn icon color="red" @click="onDelete(item.id)">
+                    <v-icon>mdi-delete</v-icon>
+                  </v-btn>
+                </template>
+                <template v-slot:no-data>
+                  <div class="text-center pa-5">
+                    <v-icon large>mdi-database-remove</v-icon>
+                    <p class="mt-2">ไม่พบข้อมูล</p>
+                  </div>
+                </template>
+              </v-data-table>
+            </v-card>
+
+            <v-dialog v-model="modal.show" max-width="800px" persistent>
+              <v-card>
+                <v-card-title>
+                  <span class="headline">{{ modal.title }}</span>
+                </v-card-title>
+                <v-card-text>
+                  <v-tabs v-model="modal.tab">
+                    <v-tab>ข้อมูลลูกค้า</v-tab>
+                    <v-tab>ข้อมูลรถ</v-tab>
+                  </v-tabs>
+
+                  <v-tabs-items v-model="modal.tab">
+                    <v-tab-item>
+                      <v-container>
+                        <v-row>
+                          <v-col cols="12" md="6">
+                            <v-text-field
+                              v-model="modal.lead.contract"
+                              label="เลขที่สัญญา"
+                              required
+                              outlined
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-select
+                              v-model="modal.lead.type"
+                              :items="settings.types"
+                              label="ประเภทสัญญา"
+                              required
+                              outlined
+                            ></v-select>
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field
+                              v-model="modal.lead.first"
+                              label="ชื่อลูกค้า"
+                              outlined
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field
+                              v-model="modal.lead.last"
+                              label="นามสกุลลูกค้า"
+                              outlined
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field
+                              v-model="modal.lead.nick"
+                              label="ชื่อเล่น"
+                              outlined
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field
+                              v-model="modal.lead.phone"
+                              label="เบอร์โทรศัพท์"
+                              outlined
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field
+                              v-model="modal.lead.postal"
+                              label="รหัสไปรษณีย์"
+                              outlined
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field
+                              v-model="modal.lead.grade"
+                              label="เกรด (ล่าสุด)"
+                              outlined
+                            ></v-text-field>
+                          </v-col>
+                        </v-row>
+                      </v-container>
+                    </v-tab-item>
+
+                    <v-tab-item>
+                      <v-container>
+                        <v-row>
+                          <v-col cols="12" md="6">
+                            <v-text-field
+                              v-model="modal.lead.brand"
+                              label="ยี่ห้อรถ"
+                              outlined
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field
+                              v-model="modal.lead.model"
+                              label="รุ่นรถ"
+                              outlined
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field
+                              v-model="modal.lead.year"
+                              label="ปีรถ"
+                              outlined
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field
+                              v-model="modal.lead.carPrice"
+                              label="ราคารถโดยประมาณ"
+                              type="number"
+                              outlined
+                            ></v-text-field>
+                          </v-col>
+                        </v-row>
+                      </v-container>
+                    </v-tab-item>
+                  </v-tabs-items>
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="blue darken-1" text @click="closeModal"
+                    >ยกเลิก</v-btn
+                  >
+                  <v-btn color="blue darken-1" text @click="saveLead"
+                    >บันทึก</v-btn
+                  >
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+
+            <v-dialog v-model="logModal.show" max-width="1200px" persistent>
+              <v-card>
+                <v-card-title>
+                  <span class="headline"
+                    >ประวัติการโทร: {{ logModal.currentLead ?
+                    logModal.currentLead.fullName : '' }}</span
+                  >
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    color="primary"
+                    @click="openAddLog(logModal.currentLead.id)"
+                    >เพิ่มบันทึกการโทร</v-btn
+                  >
+                </v-card-title>
+                <v-card-text>
+                  <v-row>
+                    <v-col cols="12" md="6">
+                      <v-card class="elevation-2">
+                        <v-card-title class="subtitle-1 font-weight-bold"
+                          >ข้อมูลลูกค้า</v-card-title
+                        >
+                        <v-card-text>
+                          <v-row dense>
+                            <v-col cols="12" sm="6" md="6"
+                              ><b>เลขที่สัญญา:</b> {{ logModal.summary.contract
+                              || '-' }}</v-col
+                            >
+                            <v-col cols="12" sm="6" md="6"
+                              ><b>ประเภทสัญญา:</b> {{ logModal.summary.type ||
+                              '-' }}</v-col
+                            >
+                            <v-col cols="12" sm="6" md="6"
+                              ><b>ชื่อลูกค้า:</b> {{ logModal.summary.fullName
+                              || '-' }}</v-col
+                            >
+                            <v-col cols="12" sm="6" md="6"
+                              ><b>ชื่อเล่น:</b> {{ logModal.summary.nick || '-'
+                              }}</v-col
+                            >
+                            <v-col cols="12" sm="6" md="6"
+                              ><b>เบอร์โทร:</b> {{ logModal.summary.phone || '-'
+                              }}</v-col
+                            >
+                            <v-col cols="12" sm="6" md="6"
+                              ><b>รหัสไปรษณีย์:</b> {{ logModal.summary.postal
+                              || '-' }}</v-col
+                            >
+                            <v-col cols="12" sm="6" md="6"
+                              ><b>ยี่ห้อรถ:</b> {{ logModal.summary.brand || '-'
+                              }}</v-col
+                            >
+                            <v-col cols="12" sm="6" md="6"
+                              ><b>รุ่นรถ:</b> {{ logModal.summary.model || '-'
+                              }}</v-col
+                            >
+                            <v-col cols="12" sm="6" md="6"
+                              ><b>ปีรถ:</b> {{ logModal.summary.year || '-'
+                              }}</v-col
+                            >
+                            <v-col cols="12" sm="6" md="6"
+                              ><b>ราคารถ:</b> {{ logModal.summary.carPrice ||
+                              '-' }}</v-col
+                            >
+                            <v-col cols="12" sm="6" md="6"
+                              ><b>เกรด (ล่าสุด):</b> {{ logModal.summary.grade
+                              || '-' }}</v-col
+                            >
+                            <v-col cols="12" sm="6" md="6"
+                              ><b>จำนวนงวด:</b> {{ logModal.summary.termsPaid ||
+                              '-' }} / {{ logModal.summary.termsTotal || '-'
+                              }}</v-col
+                            >
+                            <v-col cols="12" sm="6" md="6"
+                              ><b>เคลื่อนไหวล่าสุด:</b> {{
+                              logModal.summary.lastActive || '-' }}</v-col
+                            >
+                          </v-row>
+                        </v-card-text>
+                      </v-card>
+                    </v-col>
+
+                    <v-col cols="12" md="6">
+                      <v-card class="elevation-2">
+                        <v-card-title class="subtitle-1 font-weight-bold"
+                          >สรุปยอดสินเชื่อ</v-card-title
+                        >
+                        <v-card-text>
+                          <v-row dense>
+                            <v-col cols="12" sm="6"
+                              ><b>ยอดปิด:</b> {{ computedCalculation.closeAmount
+                              }}</v-col
+                            >
+                            <v-col cols="12" sm="6"
+                              ><b>ยอดจัด (คำนวณ):</b> {{
+                              computedCalculation.loanAmount }}</v-col
+                            >
+                            <v-col cols="12" sm="6"
+                              ><b>ค่าใช้จ่ายเพิ่มเติม:</b> {{
+                              computedCalculation.expenses }}</v-col
+                            >
+                            <v-col
+                              cols="12"
+                              sm="6"
+                              :class="{ 'green--text': toNum(computedCalculation.remainingAmount) > 0, 'red--text': toNum(computedCalculation.remainingAmount) < 0 }"
+                              ><b>ยอดคงเหลือ:</b> {{
+                              computedCalculation.remainingAmount }}</v-col
+                            >
+                            <v-col cols="12" sm="6"
+                              ><b>อัตราดอกเบี้ย:</b> {{
+                              computedCalculation.interestRateText }}</v-col
+                            >
+                            <v-col cols="12" sm="6"
+                              ><b>จำนวนงวด:</b> {{ computedCalculation.terms ||
+                              '-' }}</v-col
+                            >
+                            <v-col cols="12" sm="6"
+                              ><b>ค่างวด/เดือน:</b> {{
+                              computedCalculation.monthlyPayment }}</v-col
+                            >
+                            <v-col cols="12" sm="6"
+                              ><b>ยอดที่ต้องผ่อนทั้งหมด:</b> {{
+                              computedCalculation.totalPayable }}</v-col
+                            >
+                          </v-row>
                         </v-card-text>
 
-                        <v-data-table :headers="headers" :items="filteredLeads" :search="search" :loading="loading"
-                            :items-per-page="10" :footer-props="{ 'items-per-page-text': 'รายการต่อหน้า' }">
-                            <template v-slot:item.fullName="{ item }">
-                                <span>{{ item.first }} {{ item.last }}</span>
-                            </template>
-                            <template v-slot:item.type="{ item }">
-                                <v-chip :color="getChipColor(item.type)" dark>{{ item.type }}</v-chip>
-                            </template>
-                            <template v-slot:item.interest="{ item }">
-                                <v-chip :color="getChipColor(item.interest)" dark>{{ item.interest }}</v-chip>
-                            </template>
-                            <template v-slot:item.call="{ item }">
-                                <v-chip :color="getChipColor(item.call)" dark>{{ item.call }}</v-chip>
-                            </template>
-                            <template v-slot:item.actions="{ item }">
-                                <v-btn icon color="blue" @click="onLog(item)">
-                                    <v-icon>mdi-phone</v-icon>
-                                </v-btn>
-                                <v-btn icon color="green" @click="onEdit(item)">
-                                    <v-icon>mdi-pencil</v-icon>
-                                </v-btn>
-                                <v-btn icon color="red" @click="onDelete(item.id)">
-                                    <v-icon>mdi-delete</v-icon>
-                                </v-btn>
-                            </template>
-                            <template v-slot:no-data>
-                                <div class="text-center pa-5">
-                                    <v-icon large>mdi-database-remove</v-icon>
-                                    <p class="mt-2">ไม่พบข้อมูล</p>
-                                </div>
-                            </template>
-                        </v-data-table>
-                    </v-card>
+                        <v-divider class="my-2"></v-divider>
+                        <v-card-title class="subtitle-1 font-weight-bold"
+                          >คำนวณสินเชื่อเบื้องต้น</v-card-title
+                        >
+                        <v-card-text>
+                          <v-row dense>
+                            <v-col cols="12" sm="6">
+                              <v-text-field
+                                v-model.number="calculation.carPrice"
+                                label="ราคารถโดยประมาณ"
+                                type="number"
+                                suffix="บาท"
+                                outlined
+                              ></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6">
+                              <v-text-field
+                                v-model.number="calculation.loanAmountPercent"
+                                label="จัด (%)"
+                                type="number"
+                                suffix="%"
+                                outlined
+                              ></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6">
+                              <v-text-field
+                                v-model.number="calculation.closeAmount"
+                                label="ยอดปิด"
+                                type="number"
+                                suffix="บาท"
+                                outlined
+                              ></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6">
+                              <v-text-field
+                                v-model.number="calculation.expenses"
+                                label="ค่าใช้จ่ายเพิ่มเติม"
+                                type="number"
+                                suffix="บาท"
+                                outlined
+                              ></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6">
+                              <v-text-field
+                                v-model.number="calculation.interestRate"
+                                label="ดอกเบี้ย"
+                                type="number"
+                                suffix="%/เดือน"
+                                outlined
+                              ></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6">
+                              <v-text-field
+                                v-model.number="calculation.terms"
+                                label="จำนวนงวด"
+                                type="number"
+                                suffix="งวด"
+                                outlined
+                              ></v-text-field>
+                            </v-col>
+                          </v-row>
+                        </v-card-text>
+                      </v-card>
+                    </v-col>
+                  </v-row>
 
-                    <v-dialog v-model="modal.show" max-width="800px" persistent>
-                        <v-card>
-                            <v-card-title>
-                                <span class="headline">{{ modal.title }}</span>
-                            </v-card-title>
-                            <v-card-text>
-                                <v-tabs v-model="modal.tab">
-                                    <v-tab>ข้อมูลลูกค้า</v-tab>
-                                    <v-tab>ข้อมูลรถ</v-tab>
-                                </v-tabs>
+                  <v-divider class="my-5"></v-divider>
 
-                                <v-tabs-items v-model="modal.tab">
-                                    <v-tab-item>
-                                        <v-container>
-                                            <v-row>
-                                                <v-col cols="12" md="6">
-                                                    <v-text-field v-model="modal.lead.contract" label="เลขที่สัญญา"
-                                                        required></v-text-field>
-                                                </v-col>
-                                                <v-col cols="12" md="6">
-                                                    <v-select v-model="modal.lead.type" :items="settings.types"
-                                                        label="ประเภท" required></v-select>
-                                                </v-col>
-                                                <v-col cols="12" md="6">
-                                                    <v-text-field v-model="modal.lead.first"
-                                                        label="ชื่อลูกค้า"></v-text-field>
-                                                </v-col>
-                                                <v-col cols="12" md="6">
-                                                    <v-text-field v-model="modal.lead.last"
-                                                        label="นามสกุลลูกค้า"></v-text-field>
-                                                </v-col>
-                                                <v-col cols="12" md="6">
-                                                    <v-text-field v-model="modal.lead.nick"
-                                                        label="ชื่อเล่น"></v-text-field>
-                                                </v-col>
-                                                <v-col cols="12" md="6">
-                                                    <v-text-field v-model="modal.lead.phone"
-                                                        label="เบอร์โทรศัพท์"></v-text-field>
-                                                </v-col>
-                                                <v-col cols="12" md="6">
-                                                    <v-text-field v-model="modal.lead.postal"
-                                                        label="รหัสไปรษณีย์"></v-text-field>
-                                                </v-col>
-                                                <v-col cols="12" md="6">
-                                                    <v-text-field v-model="modal.lead.grade"
-                                                        label="เกรด (ล่าสุด)"></v-text-field>
-                                                </v-col>
-                                            </v-row>
-                                        </v-container>
-                                    </v-tab-item>
+                  <v-row>
+                    <v-col cols="12">
+                      <v-data-table
+                        :headers="logModal.headers"
+                        :items="logModal.logs"
+                        :items-per-page="5"
+                        class="elevation-1"
+                      >
+                        <template v-slot:item.termsSummary="{ item }">
+                          <span
+                            >{{ item.termsTotal || '-' }} / {{ item.termsPaid ||
+                            '-' }}</span
+                          >
+                        </template>
+                        <template v-slot:item.actions="{ item, index }">
+                          <v-btn
+                            icon
+                            color="green"
+                            @click="onEditLog(item, index)"
+                          >
+                            <v-icon>mdi-pencil</v-icon>
+                          </v-btn>
+                          <v-btn icon color="red" @click="onDeleteLog(index)">
+                            <v-icon>mdi-delete</v-icon>
+                          </v-btn>
+                        </template>
+                        <template v-slot:no-data>
+                          <div class="text-center pa-5">
+                            <v-icon large>mdi-note-text-outline</v-icon>
+                            <p class="mt-2">ยังไม่มีบันทึกการโทร</p>
+                          </div>
+                        </template>
+                      </v-data-table>
+                    </v-col>
+                  </v-row>
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="blue darken-1" text @click="closeLogModal"
+                    >ปิด</v-btn
+                  >
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
 
-                                    <v-tab-item>
-                                        <v-container>
-                                            <v-row>
-                                                <v-col cols="12" md="6">
-                                                    <v-text-field v-model="modal.lead.brand"
-                                                        label="ยี่ห้อรถ"></v-text-field>
-                                                </v-col>
-                                                <v-col cols="12" md="6">
-                                                    <v-text-field v-model="modal.lead.model"
-                                                        label="รุ่นรถ"></v-text-field>
-                                                </v-col>
-                                                <v-col cols="12" md="6">
-                                                    <v-text-field v-model="modal.lead.year" label="ปีรถ"></v-text-field>
-                                                </v-col>
-                                                <v-col cols="12" md="6">
-                                                    <v-text-field v-model="modal.lead.carPrice" label="ราคารถโดยประมาณ"
-                                                        type="number"></v-text-field>
-                                                </v-col>
-                                            </v-row>
-                                        </v-container>
-                                    </v-tab-item>
-                                </v-tabs-items>
-                            </v-card-text>
-                            <v-card-actions>
-                                <v-spacer></v-spacer>
-                                <v-btn color="blue darken-1" text @click="closeModal">ยกเลิก</v-btn>
-                                <v-btn color="blue darken-1" text @click="saveLead">บันทึก</v-btn>
-                            </v-card-actions>
-                        </v-card>
-                    </v-dialog>
+            <v-dialog v-model="addLogModal.show" max-width="800px" persistent>
+              <v-card>
+                <v-card-title>
+                  <span class="headline">{{ addLogModal.title }}</span>
+                </v-card-title>
+                <v-card-text>
+                  <v-tabs v-model="addLogModal.tab">
+                    <v-tab>ข้อมูลลูกค้า</v-tab>
+                    <v-tab>ข้อมูลการนำเสนอ</v-tab>
+                    <v-tab>ข้อมูลการติดต่อ</v-tab>
+                  </v-tabs>
 
-                    <v-dialog v-model="logModal.show" max-width="1200px" persistent>
-                        <v-card>
-                            <v-card-title>
-                                <span class="headline">ประวัติการโทร: {{ logModal.currentLead ?
-                                    logModal.currentLead.fullName : '' }}</span>
-                                <v-spacer></v-spacer>
-                                <v-btn color="primary"
-                                    @click="openAddLog(logModal.currentLead.id)">เพิ่มบันทึกการโทร</v-btn>
-                            </v-card-title>
-                            <v-card-text>
-                                <v-row>
-                                    <v-col cols="12" md="6">
-                                        <v-card class="elevation-2">
-                                            <v-card-title
-                                                class="subtitle-1 font-weight-bold">ข้อมูลลูกค้า</v-card-title>
-                                            <v-card-text>
-                                                <v-row dense>
-                                                    <v-col cols="12" sm="6" md="6"><b>เลขที่สัญญา:</b> {{
-                                                        logModal.summary.contract || '-' }}</v-col>
-                                                    <v-col cols="12" sm="6" md="6"><b>ประเภท:</b> {{
-                                                        logModal.summary.type || '-' }}</v-col>
-                                                    <v-col cols="12" sm="6" md="6"><b>ชื่อลูกค้า:</b> {{
-                                                        logModal.summary.fullName || '-' }}</v-col>
-                                                    <v-col cols="12" sm="6" md="6"><b>ชื่อเล่น:</b> {{
-                                                        logModal.summary.nick || '-' }}</v-col>
-                                                    <v-col cols="12" sm="6" md="6"><b>เบอร์โทร:</b> {{
-                                                        logModal.summary.phone || '-' }}</v-col>
-                                                    <v-col cols="12" sm="6" md="6"><b>รหัสไปรษณีย์:</b> {{
-                                                        logModal.summary.postal || '-' }}</v-col>
-                                                    <v-col cols="12" sm="6" md="6"><b>ยี่ห้อรถ:</b> {{
-                                                        logModal.summary.brand || '-' }}</v-col>
-                                                    <v-col cols="12" sm="6" md="6"><b>รุ่นรถ:</b> {{
-                                                        logModal.summary.model || '-' }}</v-col>
-                                                    <v-col cols="12" sm="6" md="6"><b>ปีรถ:</b> {{ logModal.summary.year
-                                                        || '-' }}</v-col>
-                                                    <v-col cols="12" sm="6" md="6"><b>ราคารถ:</b> {{
-                                                        logModal.summary.carPrice || '-' }}</v-col>
-                                                    <v-col cols="12" sm="6" md="6"><b>เกรด (ล่าสุด):</b> {{
-                                                        logModal.summary.grade ||
-                                                        '-' }}</v-col>
-                                                    <v-col cols="12" sm="6" md="6"><b>จำนวนงวด:</b>
-                                                        {{ logModal.summary.termsPaid || '-' }} / {{
-                                                        logModal.summary.termsTotal || '-' }}</v-col>
-                                                    <v-col cols="12" sm="6" md="6"><b>เคลื่อนไหวล่าสุด:</b>
-                                                        {{ logModal.summary.lastActive || '-' }}</v-col>
-                                                </v-row>
-                                            </v-card-text>
-                                        </v-card>
-                                    </v-col>
+                  <v-tabs-items v-model="addLogModal.tab">
+                    <v-tab-item>
+                      <v-container>
+                        <v-row>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.lead.contract"
+                              label="เลขที่สัญญา"
+                              required
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-select
+                              v-model="addLogModal.lead.type"
+                              :items="settings.types"
+                              label="สัญญา"
+                              required
+                              outlined
+                            ></v-select
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.lead.first"
+                              label="ชื่อลูกค้า"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.lead.last"
+                              label="นามสกุลลูกค้า"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.lead.nick"
+                              label="ชื่อเล่น"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.lead.phone"
+                              label="เบอร์โทรศัพท์"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.lead.postal"
+                              label="รหัสไปรษณีย์"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.lead.grade"
+                              label="เกรด (ล่าสุด)"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.log.lastActive"
+                              label="ครั้งล่าสุดที่ใช้งาน"
+                              type="date"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.log.accountStatus"
+                              label="สถานะบัญชี"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.log.termsTotal"
+                              label="งวดทั้งหมด"
+                              type="number"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.log.termsPaid"
+                              label="งวดที่จ่ายแล้ว"
+                              type="number"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.lead.brand"
+                              label="ยี่ห้อรถ"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.lead.model"
+                              label="รุ่นรถ"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.lead.year"
+                              label="ปีรถ"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.lead.carPrice"
+                              label="ราคารถโดยประมาณ"
+                              type="number"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                        </v-row>
+                      </v-container>
+                    </v-tab-item>
+                    <v-tab-item>
+                      <v-container>
+                        <v-row>
+                          <v-col cols="12" md="6"
+                            ><v-select
+                              v-model="addLogModal.log.campaign"
+                              :items="settings.campaigns"
+                              label="แคมเปญ"
+                              outlined
+                            ></v-select
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.log.grade"
+                              label="เกรด"
+                              placeholder="A, B, C, D"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.log.closeAmount"
+                              label="ยอดปิด"
+                              type="number"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.log.loanAmount"
+                              label="ยอดจัด"
+                              type="number"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              :value="computedRemainingAmount"
+                              label="ยอดคงเหลือ"
+                              readonly
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.log.interestRate"
+                              label="ดอกเบี้ย (%)"
+                              type="number"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.log.months"
+                              label="จำนวนงวด"
+                              type="number"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              :value="computedMonthlyPay"
+                              label="ค่างวด/เดือน"
+                              readonly
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12"
+                            ><v-text-field
+                              v-model="addLogModal.log.expenses"
+                              label="ค่าใช้จ่าย"
+                              type="number"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                        </v-row>
+                      </v-container>
+                    </v-tab-item>
+                    <v-tab-item>
+                      <v-container>
+                        <v-row>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.log.callDate"
+                              label="วันที่โทร"
+                              type="date"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.log.callTime"
+                              label="เวลาที่โทร"
+                              type="time"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-text-field
+                              v-model="addLogModal.log.appointment"
+                              label="วันนัดหมาย"
+                              type="date"
+                              outlined
+                            ></v-text-field
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-select
+                              v-model="addLogModal.log.callStatus"
+                              :items="settings.calls"
+                              label="สถานะการโทร"
+                              outlined
+                            ></v-select
+                          ></v-col>
+                          <v-col cols="12" md="6"
+                            ><v-select
+                              v-model="addLogModal.log.interest"
+                              :items="settings.interests"
+                              label="ความสนใจ"
+                              outlined
+                            ></v-select
+                          ></v-col>
 
-                                    <v-col cols="12" md="6">
-                                        <v-card class="elevation-2">
-                                            <v-card-title
-                                                class="subtitle-1 font-weight-bold">สรุปยอดสินเชื่อ</v-card-title>
-                                            <v-card-text>
-                                                <v-row dense>
-                                                    <v-col cols="12" sm="6"><b>ยอดปิด:</b> {{
-                                                        computedCalculation.closeAmount }}</v-col>
-                                                    <v-col cols="12" sm="6"><b>ยอดจัด (คำนวณ):</b> {{
-                                                        computedCalculation.loanAmount }}</v-col>
-                                                    <v-col cols="12" sm="6"><b>ค่าใช้จ่ายเพิ่มเติม:</b> {{
-                                                        computedCalculation.expenses }}</v-col>
-                                                    <v-col cols="12" sm="6"
-                                                        :class="{ 'green--text': toNum(computedCalculation.remainingAmount) > 0, 'red--text': toNum(computedCalculation.remainingAmount) < 0 }"><b>ยอดคงเหลือ:</b>
-                                                        {{ computedCalculation.remainingAmount }}</v-col>
-                                                    <v-col cols="12" sm="6"><b>อัตราดอกเบี้ย:</b> {{
-                                                        computedCalculation.interestRateText }}</v-col>
-                                                    <v-col cols="12" sm="6"><b>จำนวนงวด:</b> {{
-                                                        computedCalculation.terms || '-' }}</v-col>
-                                                    <v-col cols="12" sm="6"><b>ค่างวด/เดือน:</b> {{
-                                                        computedCalculation.monthlyPayment }}</v-col>
-                                                    <v-col cols="12" sm="6"><b>ยอดที่ต้องผ่อนทั้งหมด:</b> {{
-                                                        computedCalculation.totalPayable }}</v-col>
-                                                </v-row>
-                                            </v-card-text>
+                          <v-col cols="12"
+                            ><v-textarea
+                              v-model="addLogModal.log.detail"
+                              label="รายละเอียดการโทร"
+                              outlined
+                            ></v-textarea
+                          ></v-col>
+                          <v-col cols="12"
+                            ><v-textarea
+                              v-model="addLogModal.log.remarks"
+                              label="หมายเหตุ"
+                              outlined
+                            ></v-textarea
+                          ></v-col>
+                        </v-row>
+                      </v-container>
+                    </v-tab-item>
+                  </v-tabs-items>
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="blue darken-1" text @click="closeAddLog"
+                    >ยกเลิก</v-btn
+                  >
+                  <v-btn color="blue darken-1" text @click="saveLog"
+                    >บันทึก</v-btn
+                  >
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
 
-                                            <v-divider class="my-2"></v-divider>
-                                            <v-card-title
-                                                class="subtitle-1 font-weight-bold">คำนวณสินเชื่อเบื้องต้น</v-card-title>
-                                            <v-card-text>
-                                                <v-row dense>
-                                                    <v-col cols="12" sm="6">
-                                                        <v-text-field v-model.number="calculation.carPrice"
-                                                            label="ราคารถโดยประมาณ" type="number"
-                                                            suffix="บาท"></v-text-field>
-                                                    </v-col>
-                                                    <v-col cols="12" sm="6">
-                                                        <v-text-field v-model.number="calculation.loanAmountPercent"
-                                                            label="จัด (%)" type="number" suffix="%"></v-text-field>
-                                                    </v-col>
-                                                    <v-col cols="12" sm="6">
-                                                        <v-text-field v-model.number="calculation.closeAmount"
-                                                            label="ยอดปิด" type="number" suffix="บาท"></v-text-field>
-                                                    </v-col>
-                                                    <v-col cols="12" sm="6">
-                                                        <v-text-field v-model.number="calculation.expenses"
-                                                            label="ค่าใช้จ่ายเพิ่มเติม" type="number"
-                                                            suffix="บาท"></v-text-field>
-                                                    </v-col>
-                                                    <v-col cols="12" sm="6">
-                                                        <v-text-field v-model.number="calculation.interestRate"
-                                                            label="ดอกเบี้ย" type="number"
-                                                            suffix="%/เดือน"></v-text-field>
-                                                    </v-col>
-                                                    <v-col cols="12" sm="6">
-                                                        <v-text-field v-model.number="calculation.terms"
-                                                            label="จำนวนงวด" type="number" suffix="งวด"></v-text-field>
-                                                    </v-col>
-                                                </v-row>
-                                            </v-card-text>
-                                        </v-card>
-                                    </v-col>
-                                </v-row>
+            <v-dialog v-model="settingsModal.show" max-width="600px" persistent>
+              <v-card>
+                <v-card-title
+                  ><span class="headline">ตั้งค่าตัวเลือก</span></v-card-title
+                >
+                <v-card-text>
+                  <v-tabs v-model="settingsModal.tab">
+                    <v-tab>สัญญา</v-tab>
+                    <v-tab>ความสนใจ</v-tab>
+                    <v-tab>สถานะการโทร</v-tab>
+                    <v-tab>แคมเปญ</v-tab>
+                  </v-tabs>
+                  <v-tabs-items v-model="settingsModal.tab">
+                    <v-tab-item
+                      ><v-container
+                        ><v-list dense
+                          ><v-list-item
+                            v-for="(item, index) in settings.types"
+                            :key="index"
+                            ><v-list-item-content
+                              >{{ item }}</v-list-item-content
+                            ><v-list-item-action
+                              ><v-btn
+                                icon
+                                @click="deleteSetting('types', index)"
+                                ><v-icon color="red">mdi-delete</v-icon></v-btn
+                              ></v-list-item-action
+                            ></v-list-item
+                          ></v-list
+                        ><v-text-field
+                          v-model="settingsModal.newVal.types"
+                          label="เพิ่มประเภทใหม่"
+                          @keyup.enter="addSetting('types')"
+                          outlined
+                          ><template v-slot:append
+                            ><v-btn icon @click="addSetting('types')"
+                              ><v-icon color="primary">mdi-plus</v-icon></v-btn
+                            ></template
+                          ></v-text-field
+                        ></v-container
+                      ></v-tab-item
+                    >
+                    <v-tab-item
+                      ><v-container
+                        ><v-list dense
+                          ><v-list-item
+                            v-for="(item, index) in settings.interests"
+                            :key="index"
+                            ><v-list-item-content
+                              >{{ item }}</v-list-item-content
+                            ><v-list-item-action
+                              ><v-btn
+                                icon
+                                @click="deleteSetting('interests', index)"
+                                ><v-icon color="red">mdi-delete</v-icon></v-btn
+                              ></v-list-item-action
+                            ></v-list-item
+                          ></v-list
+                        ><v-text-field
+                          v-model="settingsModal.newVal.interests"
+                          label="เพิ่มความสนใจใหม่"
+                          @keyup.enter="addSetting('interests')"
+                          outlined
+                          ><template v-slot:append
+                            ><v-btn icon @click="addSetting('interests')"
+                              ><v-icon color="primary">mdi-plus</v-icon></v-btn
+                            ></template
+                          >
+                          
+                          </v-text-field
+                        ></v-container
+                      ></v-tab-item
+                    >
+                    <v-tab-item
+                      ><v-container
+                        ><v-list dense
+                          ><v-list-item
+                            v-for="(item, index) in settings.calls"
+                            :key="index"
+                            ><v-list-item-content
+                              >{{ item }}</v-list-item-content
+                            ><v-list-item-action
+                              ><v-btn
+                                icon
+                                @click="deleteSetting('calls', index)"
+                                ><v-icon color="red">mdi-delete</v-icon></v-btn
+                              ></v-list-item-action
+                            ></v-list-item
+                          ></v-list
+                        ><v-text-field
+                          v-model="settingsModal.newVal.calls"
+                          label="เพิ่มสถานะการโทรใหม่"
+                          @keyup.enter="addSetting('calls')"
+                          outlined
+                          ><template v-slot:append
+                            ><v-btn icon @click="addSetting('calls')"
+                              ><v-icon color="primary">mdi-plus</v-icon></v-btn
+                            ></template
+                          ></v-text-field
+                        ></v-container
+                      ></v-tab-item
+                    >
+                    <v-tab-item
+                      ><v-container
+                        ><v-list dense
+                          ><v-list-item
+                            v-for="(item, index) in settings.campaigns"
+                            :key="index"
+                            ><v-list-item-content
+                              >{{ item }}</v-list-item-content
+                            ><v-list-item-action
+                              ><v-btn
+                                icon
+                                @click="deleteSetting('campaigns', index)"
+                                ><v-icon color="red">mdi-delete</v-icon></v-btn
+                              ></v-list-item-action
+                            ></v-list-item
+                          ></v-list
+                        ><v-text-field
+                          v-model="settingsModal.newVal.campaigns"
+                          label="เพิ่มแคมเปญใหม่"
+                          @keyup.enter="addSetting('campaigns')"
+                          outlined
+                          ><template v-slot:append
+                            ><v-btn icon @click="addSetting('campaigns')"
+                              ><v-icon color="primary">mdi-plus</v-icon></v-btn
+                            ></template
+                          ></v-text-field
+                        ></v-container
+                      ></v-tab-item
+                    >
+                  </v-tabs-items>
+                </v-card-text>
+                <v-card-actions
+                  ><v-spacer></v-spacer
+                  ><v-btn color="blue darken-1" text @click="closeSettings"
+                    >ปิด</v-btn
+                  ></v-card-actions
+                >
+              </v-card>
+            </v-dialog>
 
-                                <v-divider class="my-5"></v-divider>
-
-                                <v-row>
-                                    <v-col cols="12">
-                                        <v-data-table :headers="logModal.headers" :items="logModal.logs"
-                                            :items-per-page="5" class="elevation-1">
-                                            <template v-slot:item.termsSummary="{ item }">
-                                                <span>{{ item.termsTotal || '-' }} / {{ item.termsPaid || '-' }}</span>
-                                            </template>
-                                            <template v-slot:item.actions="{ item, index }">
-                                                <v-btn icon color="green" @click="onEditLog(item, index)">
-                                                    <v-icon>mdi-pencil</v-icon>
-                                                </v-btn>
-                                                <v-btn icon color="red" @click="onDeleteLog(index)">
-                                                    <v-icon>mdi-delete</v-icon>
-                                                </v-btn>
-                                            </template>
-                                            <template v-slot:no-data>
-                                                <div class="text-center pa-5">
-                                                    <v-icon large>mdi-note-text-outline</v-icon>
-                                                    <p class="mt-2">ยังไม่มีบันทึกการโทร</p>
-                                                </div>
-                                            </template>
-                                        </v-data-table>
-                                    </v-col>
-                                </v-row>
-                            </v-card-text>
-                            <v-card-actions>
-                                <v-spacer></v-spacer>
-                                <v-btn color="blue darken-1" text @click="closeLogModal">ปิด</v-btn>
-                            </v-card-actions>
-                        </v-card>
-                    </v-dialog>
-
-                    <v-dialog v-model="addLogModal.show" max-width="800px" persistent>
-                        <v-card>
-                            <v-card-title>
-                                <span class="headline">{{ addLogModal.title }}</span>
-                            </v-card-title>
-                            <v-card-text>
-                                <v-tabs v-model="addLogModal.tab">
-                                    <v-tab>ข้อมูลลูกค้า</v-tab>
-                                    <v-tab>ข้อมูลการนำเสนอ</v-tab>
-                                    <v-tab>ข้อมูลการติดต่อ</v-tab>
-                                </v-tabs>
-
-                                <v-tabs-items v-model="addLogModal.tab">
-                                    <v-tab-item>
-                                        <v-container>
-                                            <v-row>
-                                                <v-col cols="12" md="6"><v-text-field
-                                                        v-model="addLogModal.lead.contract" label="เลขที่สัญญา"
-                                                        required></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-select v-model="addLogModal.lead.type"
-                                                        :items="settings.types" label="ประเภท"
-                                                        required></v-select></v-col>
-                                                <v-col cols="12" md="6"><v-text-field v-model="addLogModal.lead.first"
-                                                        label="ชื่อลูกค้า"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field v-model="addLogModal.lead.last"
-                                                        label="นามสกุลลูกค้า"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field v-model="addLogModal.lead.nick"
-                                                        label="ชื่อเล่น"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field v-model="addLogModal.lead.phone"
-                                                        label="เบอร์โทรศัพท์"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field v-model="addLogModal.lead.postal"
-                                                        label="รหัสไปรษณีย์"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field v-model="addLogModal.lead.grade"
-                                                        label="เกรด (ล่าสุด)"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field
-                                                        v-model="addLogModal.log.lastActive"
-                                                        label="ครั้งล่าสุดที่ใช้งาน" type="date"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field
-                                                        v-model="addLogModal.log.accountStatus"
-                                                        label="สถานะบัญชี"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field
-                                                        v-model="addLogModal.log.termsTotal" label="งวดทั้งหมด"
-                                                        type="number"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field
-                                                        v-model="addLogModal.log.termsPaid" label="งวดที่จ่ายแล้ว"
-                                                        type="number"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field v-model="addLogModal.lead.brand"
-                                                        label="ยี่ห้อรถ"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field v-model="addLogModal.lead.model"
-                                                        label="รุ่นรถ"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field v-model="addLogModal.lead.year"
-                                                        label="ปีรถ"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field
-                                                        v-model="addLogModal.lead.carPrice" label="ราคารถโดยประมาณ"
-                                                        type="number"></v-text-field></v-col>
-                                            </v-row>
-                                        </v-container>
-                                    </v-tab-item>
-                                    <v-tab-item>
-                                        <v-container>
-                                            <v-row>
-                                                <v-col cols="12" md="6"><v-select v-model="addLogModal.log.campaign"
-                                                        :items="settings.campaigns" label="แคมเปญ"></v-select></v-col>
-                                                <v-col cols="12" md="6"><v-text-field v-model="addLogModal.log.grade"
-                                                        label="เกรด" placeholder="A, B, C, D"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field
-                                                        v-model="addLogModal.log.closeAmount" label="ยอดปิด"
-                                                        type="number"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field
-                                                        v-model="addLogModal.log.loanAmount" label="ยอดจัด"
-                                                        type="number"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field :value="computedRemainingAmount"
-                                                        label="ยอดคงเหลือ" readonly></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field
-                                                        v-model="addLogModal.log.interestRate" label="ดอกเบี้ย (%)"
-                                                        type="number"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field v-model="addLogModal.log.months"
-                                                        label="จำนวนงวด" type="number"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field :value="computedMonthlyPay"
-                                                        label="ค่างวด/เดือน" readonly></v-text-field></v-col>
-                                                <v-col cols="12"><v-text-field v-model="addLogModal.log.expenses"
-                                                        label="ค่าใช้จ่าย" type="number"></v-text-field></v-col>
-                                            </v-row>
-                                        </v-container>
-                                    </v-tab-item>
-                                    <v-tab-item>
-                                        <v-container>
-                                            <v-row>
-                                                <v-col cols="12" md="6"><v-text-field v-model="addLogModal.log.callDate"
-                                                        label="วันที่โทร" type="date"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field v-model="addLogModal.log.callTime"
-                                                        label="เวลาที่โทร" type="time"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-text-field
-                                                        v-model="addLogModal.log.appointment" label="วันนัดหมาย"
-                                                        type="date"></v-text-field></v-col>
-                                                <v-col cols="12" md="6"><v-select v-model="addLogModal.log.callStatus"
-                                                        :items="settings.calls" label="สถานะการโทร"></v-select></v-col>
-                                                <v-col cols="12" md="6"><v-select v-model="addLogModal.log.interest"
-                                                        :items="settings.interests" label="ความสนใจ"></v-select></v-col>
-
-                                                <v-col cols="12"><v-textarea v-model="addLogModal.log.detail"
-                                                        label="รายละเอียดการโทร"></v-textarea></v-col>
-                                                <v-col cols="12"><v-textarea v-model="addLogModal.log.remarks"
-                                                        label="หมายเหตุ"></v-textarea></v-col>
-                                            </v-row>
-                                        </v-container>
-                                    </v-tab-item>
-                                </v-tabs-items>
-                            </v-card-text>
-                            <v-card-actions>
-                                <v-spacer></v-spacer>
-                                <v-btn color="blue darken-1" text @click="closeAddLog">ยกเลิก</v-btn>
-                                <v-btn color="blue darken-1" text @click="saveLog">บันทึก</v-btn>
-                            </v-card-actions>
-                        </v-card>
-                    </v-dialog>
-
-                    <v-dialog v-model="settingsModal.show" max-width="600px" persistent>
-                        <v-card>
-                            <v-card-title><span class="headline">ตั้งค่าตัวเลือก</span></v-card-title>
-                            <v-card-text>
-                                <v-tabs v-model="settingsModal.tab">
-                                    <v-tab>ประเภท</v-tab>
-                                    <v-tab>ความสนใจ</v-tab>
-                                    <v-tab>สถานะการโทร</v-tab>
-                                    <v-tab>แคมเปญ</v-tab>
-                                </v-tabs>
-                                <v-tabs-items v-model="settingsModal.tab">
-                                    <v-tab-item><v-container><v-list dense><v-list-item
-                                                    v-for="(item, index) in settings.types"
-                                                    :key="index"><v-list-item-content>{{ item
-                                                        }}</v-list-item-content><v-list-item-action><v-btn icon
-                                                            @click="deleteSetting('types', index)"><v-icon
-                                                                color="red">mdi-delete</v-icon></v-btn></v-list-item-action></v-list-item></v-list><v-text-field
-                                                v-model="settingsModal.newVal.types" label="เพิ่มประเภทใหม่"
-                                                @keyup.enter="addSetting('types')"><template v-slot:append><v-btn icon
-                                                        @click="addSetting('types')"><v-icon
-                                                            color="primary">mdi-plus</v-icon></v-btn></template></v-text-field></v-container></v-tab-item>
-                                    <v-tab-item><v-container><v-list dense><v-list-item
-                                                    v-for="(item, index) in settings.interests"
-                                                    :key="index"><v-list-item-content>{{ item
-                                                        }}</v-list-item-content><v-list-item-action><v-btn icon
-                                                            @click="deleteSetting('interests', index)"><v-icon
-                                                                color="red">mdi-delete</v-icon></v-btn></v-list-item-action></v-list-item></v-list><v-text-field
-                                                v-model="settingsModal.newVal.interests" label="เพิ่มความสนใจใหม่"
-                                                @keyup.enter="addSetting('interests')"><template v-slot:append><v-btn
-                                                        icon @click="addSetting('interests')"><v-icon
-                                                            color="primary">mdi-plus</v-icon></v-btn></template></v-text-field></v-container></v-tab-item>
-                                    <v-tab-item><v-container><v-list dense><v-list-item
-                                                    v-for="(item, index) in settings.calls"
-                                                    :key="index"><v-list-item-content>{{ item
-                                                        }}</v-list-item-content><v-list-item-action><v-btn icon
-                                                            @click="deleteSetting('calls', index)"><v-icon
-                                                                color="red">mdi-delete</v-icon></v-btn></v-list-item-action></v-list-item></v-list><v-text-field
-                                                v-model="settingsModal.newVal.calls" label="เพิ่มสถานะการโทรใหม่"
-                                                @keyup.enter="addSetting('calls')"><template v-slot:append><v-btn icon
-                                                        @click="addSetting('calls')"><v-icon
-                                                            color="primary">mdi-plus</v-icon></v-btn></template></v-text-field></v-container></v-tab-item>
-                                    <v-tab-item><v-container><v-list dense><v-list-item
-                                                    v-for="(item, index) in settings.campaigns"
-                                                    :key="index"><v-list-item-content>{{ item
-                                                        }}</v-list-item-content><v-list-item-action><v-btn icon
-                                                            @click="deleteSetting('campaigns', index)"><v-icon
-                                                                color="red">mdi-delete</v-icon></v-btn></v-list-item-action></v-list-item></v-list><v-text-field
-                                                v-model="settingsModal.newVal.campaigns" label="เพิ่มแคมเปญใหม่"
-                                                @keyup.enter="addSetting('campaigns')"><template v-slot:append><v-btn
-                                                        icon @click="addSetting('campaigns')"><v-icon
-                                                            color="primary">mdi-plus</v-icon></v-btn></template></v-text-field></v-container></v-tab-item>
-                                </v-tabs-items>
-                            </v-card-text>
-                            <v-card-actions><v-spacer></v-spacer><v-btn color="blue darken-1" text
-                                    @click="closeSettings">ปิด</v-btn></v-card-actions>
-                        </v-card>
-                    </v-dialog>
-
-                    <input type="file" id="leadFileInput" style="display: none;" @change="importLeads" accept=".csv">
-                    <input type="file" id="logFileInput" style="display: none;" @change="importLogs" accept=".csv">
-                </v-container>
-            </v-main>
-        </v-app>
+            <input
+              type="file"
+              id="leadFileInput"
+              style="display: none"
+              @change="importLeads"
+              accept=".csv"
+            />
+            <input
+              type="file"
+              id="logFileInput"
+              style="display: none"
+              @change="importLogs"
+              accept=".csv"
+            />
+          </v-container>
+        </v-main>
+      </v-app>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="app.js"></script>
-</body>
-
+    
+  </body>
 </html>
+<style>
+  .v-data-table__mobile-row {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  }
+
+  .v-data-table__mobile-row__header {
+    font-weight: bold;
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  /* CSS ใหม่สำหรับควบคุมขนาด Dropdown */
+  .search-input-container {
+    position: relative;
+  }
+
+  .v-menu__content.v-menu__content--fixed {
+    top: auto !important;
+    left: auto !important;
+    position: absolute; /* เปลี่ยนเป็น absolute เพื่อให้สัมพันธ์กับ parent */
+  }
+
+  .filter-menu-card {
+    /* ใช้ min-width เพื่อให้ขนาดของเมนูไม่เล็กเกินไป และจะกว้างตาม container */
+    min-width: 350px; 
+  }
+</style>
